@@ -7,6 +7,7 @@ import '../models/barang.dart';
 import '../providers/printer_provider.dart';
 import '../providers/transaksi_provider.dart';
 import '../utils/formatters.dart';
+import '../widgets/profit_charts.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -109,6 +110,10 @@ class _DashboardBodyState extends State<_DashboardBody> {
             _buildMonthHeader(context),
             const SizedBox(height: 12),
             _buildMonthCards(context),
+            const SizedBox(height: 24),
+            _buildMonthlyProfitChart(context),
+            const SizedBox(height: 24),
+            _buildDailyProfitChart(context),
             const SizedBox(height: 24),
             _buildBestSelling(context),
             const SizedBox(height: 16),
@@ -437,6 +442,115 @@ class _DashboardBodyState extends State<_DashboardBody> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget _buildMonthlyProfitChart(BuildContext context) {
+    final provider = context.watch<TransaksiProvider>();
+    final data = provider.getMonthlyDataLast12Months();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1565C0).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.bar_chart,
+                    color: Color(0xFF1565C0), size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Keuntungan Per Bulan',
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '12 bulan terakhir',
+            style: TextStyle(fontSize: 11, color: Colors.grey[400]),
+          ),
+          const SizedBox(height: 12),
+          MonthlyProfitChart(data: data),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDailyProfitChart(BuildContext context) {
+    final provider = context.watch<TransaksiProvider>();
+    final data = provider.getDailyDataForMonth(_selectedYear, _selectedMonth);
+
+    final monthNames = [
+      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+    ];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E7D32).withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.show_chart,
+                    color: Color(0xFF2E7D32), size: 18),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Keuntungan Harian',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600, fontSize: 14),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${monthNames[_selectedMonth]} $_selectedYear',
+                      style: TextStyle(
+                          fontSize: 11, color: Colors.grey[400]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          DailyProfitChart(data: data),
+        ],
+      ),
     );
   }
 

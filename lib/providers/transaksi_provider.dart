@@ -82,6 +82,46 @@ class TransaksiProvider extends ChangeNotifier {
   double get profitSemua =>
       _transaksiList.fold(0, (sum, t) => sum + t.keuntungan);
 
+  List<DailyProfitData> getDailyDataForMonth(int year, int month) {
+    final now = DateTime.now();
+    final isCurrentMonth = year == now.year && month == now.month;
+    final daysInMonth = DateTime(year, month + 1, 0).day;
+    final maxDay = isCurrentMonth ? now.day : daysInMonth;
+
+    final monthTransactions = getTransaksiForMonth(year, month);
+    final result = <DailyProfitData>[];
+
+    for (int day = 1; day <= maxDay; day++) {
+      final dayTx = monthTransactions
+          .where((t) =>
+              t.timestamp.year == year &&
+              t.timestamp.month == month &&
+              t.timestamp.day == day)
+          .toList();
+      final gross = dayTx.fold(0.0, (double sum, t) => sum + t.total);
+      final net = dayTx.fold(0.0, (double sum, t) => sum + t.keuntungan);
+      result.add(DailyProfitData(day: day, gross: gross, net: net));
+    }
+    return result;
+  }
+
+  List<MonthlyProfitData> getMonthlyDataLast12Months() {
+    final now = DateTime.now();
+    final result = <MonthlyProfitData>[];
+    for (int i = 11; i >= 0; i--) {
+      int m = now.month - i;
+      int y = now.year;
+      while (m <= 0) {
+        m += 12;
+        y--;
+      }
+      final total = getMonthTotal(y, m);
+      final profit = getMonthProfit(y, m);
+      result.add(MonthlyProfitData(month: m, year: y, gross: total, net: profit));
+    }
+    return result;
+  }
+
   List<SalesItem> getBestSellingItems(List<Transaksi> transactions) {
     final map = <String, SalesItem>{};
     for (final t in transactions) {
@@ -235,4 +275,22 @@ class SalesItem {
     required this.totalKotor,
     required this.totalBersih,
   });
+}
+
+class DailyProfitData {
+  final int day;
+  final double gross;
+  final double net;
+
+  DailyProfitData({required this.day, required this.gross, required this.net});
+}
+
+class MonthlyProfitData {
+  final int month;
+  final int year;
+  final double gross;
+  final double net;
+
+  MonthlyProfitData(
+      {required this.month, required this.year, required this.gross, required this.net});
 }
