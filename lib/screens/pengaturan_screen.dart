@@ -117,12 +117,6 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
 
     final storage = StorageService();
     await storage.saveSettings(printer.toSettingsMap());
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pengaturan tersimpan')),
-      );
-    }
   }
 
   Future<void> _pickLogo() async {
