@@ -27,10 +27,13 @@ class _DashboardBody extends StatefulWidget {
   State<_DashboardBody> createState() => _DashboardBodyState();
 }
 
+enum _DashboardView { semua, hariIni, bulan, barang }
+
 class _DashboardBodyState extends State<_DashboardBody> {
   DateTime _selectedDate = DateTime.now();
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
+  _DashboardView _selectedView = _DashboardView.semua;
 
   bool get _isToday {
     final now = DateTime.now();
@@ -102,24 +105,69 @@ class _DashboardBodyState extends State<_DashboardBody> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context),
-            const SizedBox(height: 20),
-            _buildDateFilter(context),
-            const SizedBox(height: 16),
-            _buildDayCards(context),
-            const SizedBox(height: 24),
-            _buildMonthHeader(context),
             const SizedBox(height: 12),
-            _buildMonthCards(context),
-            const SizedBox(height: 24),
-            _buildMonthlyProfitChart(context),
-            const SizedBox(height: 24),
-            _buildDailyProfitChart(context),
-            const SizedBox(height: 24),
-            _buildBestSelling(context),
+            _buildViewFilter(),
             const SizedBox(height: 16),
-            _buildLowStock(context),
+            if (_selectedView == _DashboardView.semua ||
+                _selectedView == _DashboardView.hariIni) ...[
+              _buildDateFilter(context),
+              const SizedBox(height: 16),
+              _buildDayCards(context),
+            ],
+            if (_selectedView == _DashboardView.semua ||
+                _selectedView == _DashboardView.bulan) ...[
+              _buildMonthHeader(context),
+              const SizedBox(height: 12),
+              _buildMonthCards(context),
+              const SizedBox(height: 24),
+              _buildMonthlyProfitChart(context),
+              const SizedBox(height: 24),
+              _buildDailyProfitChart(context),
+            ],
+            if (_selectedView == _DashboardView.semua ||
+                _selectedView == _DashboardView.barang) ...[
+              if (_selectedView == _DashboardView.barang) ...[
+                const SizedBox(height: 16),
+              ],
+              _buildBestSelling(context),
+              const SizedBox(height: 16),
+              _buildLowStock(context),
+            ],
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildViewFilter() {
+    final items = [
+      (_DashboardView.semua, Icons.dashboard_rounded, 'Semua'),
+      (_DashboardView.hariIni, Icons.today, 'Hari Ini'),
+      (_DashboardView.bulan, Icons.calendar_month, 'Bulan'),
+      (_DashboardView.barang, Icons.inventory_2_outlined, 'Barang'),
+    ];
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final (view, icon, label) = items[i];
+          final selected = _selectedView == view;
+          return ChoiceChip(
+            selected: selected,
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 15),
+                const SizedBox(width: 4),
+                Text(label, style: const TextStyle(fontSize: 12)),
+              ],
+            ),
+            onSelected: (_) => setState(() => _selectedView = view),
+          );
+        },
       ),
     );
   }
