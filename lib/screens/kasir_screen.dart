@@ -620,7 +620,7 @@ class _CartPanelState extends State<_CartPanel> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Total (${formatQty(cartItems.fold<double>(0, (s, c) => s + c.qty))} qty):',
+                    'Total (${formatQty(cartItems.fold<double>(0, (s, c) => s + (c.satuan == 'kg' || c.satuan == 'gram' || c.satuan == 'liter' || c.satuan == 'ml' ? 1.0 : c.qty)))} qty):',
                     style: const TextStyle(
                         fontSize: 14, fontWeight: FontWeight.w500),
                   ),
