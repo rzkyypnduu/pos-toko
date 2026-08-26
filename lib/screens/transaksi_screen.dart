@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/transaksi.dart';
+import '../providers/printer_provider.dart';
 import '../providers/transaksi_provider.dart';
 import '../utils/formatters.dart';
 import '../widgets/responsive_layout.dart';
@@ -326,80 +327,203 @@ class _TransaksiDetailDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    final printer = context.read<PrinterProvider>();
+    final namaToko = printer.namaToko;
+    final alamat = printer.alamat;
+    final noTelp = printer.noTelp;
+    final slogan = printer.sloganPenutup;
+    final footer = printer.footerStruk;
+
+    return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: const Color(0xFF1565C0).withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Detail Transaksi',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
             ),
-            child: const Icon(Icons.receipt,
-                color: Color(0xFF1565C0), size: 20),
           ),
-          const SizedBox(width: 10),
-          Text('Transaksi #${transaksi.id}'),
-        ],
-      ),
-      content: SizedBox(
-        width: 350,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(formatDate(transaksi.timestamp),
-                style: TextStyle(color: Colors.grey[600])),
-            const Divider(),
-            ...transaksi.items.map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                          child:
-                              Text('${item.nama} x${formatQty(item.qty)}')),
-                      Text(formatRupiah(item.subtotal)),
+          const Divider(height: 1),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Center(
+                child: Container(
+                  width: 260,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: Colors.grey.shade300),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withValues(alpha: 0.15),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
                     ],
                   ),
-                )),
-            const Divider(),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Total',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(formatRupiah(transaksi.total),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1565C0))),
-              ],
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        namaToko,
+                        style: const TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (alamat.isNotEmpty)
+                        Text(alamat,
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade600),
+                            textAlign: TextAlign.center),
+                      if (noTelp.isNotEmpty)
+                        Text('Telp: $noTelp',
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade600),
+                            textAlign: TextAlign.center),
+                      if (alamat.isNotEmpty || noTelp.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 6),
+                          child: Divider(
+                              height: 1, color: Colors.grey.shade300),
+                        ),
+                      Text(
+                        formatDate(transaksi.timestamp),
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade500),
+                        textAlign: TextAlign.center,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Divider(
+                            height: 1, color: Colors.grey.shade300),
+                      ),
+                      ...transaksi.items.map((item) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item.nama,
+                                    style: const TextStyle(fontSize: 12)),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        '${formatQty(item.qty)} ${item.satuan.isNotEmpty ? item.satuan : 'pcs'} x ${formatRupiah(item.harga)}',
+                                        style: TextStyle(
+                                            fontSize: 11,
+                                            color: Colors.grey.shade600)),
+                                    Text(formatRupiah(item.subtotal),
+                                        style: const TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          )),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Divider(
+                            height: 1, color: Colors.grey.shade300),
+                      ),
+                      _receiptRow('TOTAL', formatRupiah(transaksi.total),
+                          bold: true),
+                      _receiptRow('BAYAR', formatRupiah(transaksi.bayar)),
+                      _receiptRow('KEMBALI',
+                          formatRupiah(transaksi.kembalian)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 6),
+                        child: Divider(
+                            height: 1, color: Colors.grey.shade300),
+                      ),
+                      Text(
+                        slogan.isNotEmpty ? slogan : 'Terima kasih!',
+                        style: const TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (footer.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(footer,
+                            style: TextStyle(
+                                fontSize: 10, color: Colors.grey.shade500),
+                            textAlign: TextAlign.center),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Bayar'),
-                Text(formatRupiah(transaksi.bayar)),
-              ],
+          ),
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(
+                  top: BorderSide(color: Colors.grey.shade200)),
+              borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(16)),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Kembali'),
-                Text(formatRupiah(transaksi.kembalian)),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () async {
+                  final result = await printer.printStruk(transaksi);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(result
+                            ? 'Struk berhasil dicetak'
+                            : 'Gagal cetak. Pastikan printer terhubung.'),
+                        backgroundColor:
+                            result ? const Color(0xFF2E7D32) : Colors.red,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.print, size: 18),
+                label: const Text('Cetak Ulang Struk'),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Tutup'),
-        ),
-      ],
+    );
+  }
+
+  Widget _receiptRow(String left, String right, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(left,
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+          ),
+          const SizedBox(width: 8),
+          Text(right,
+              style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: bold ? FontWeight.bold : FontWeight.normal)),
+        ],
+      ),
     );
   }
 }
