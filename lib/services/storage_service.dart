@@ -72,4 +72,32 @@ class StorageService {
     final file = await _getFile(_settingsFile);
     await file.writeAsString(jsonEncode(settings));
   }
+
+  static const _logoFile = 'logo_toko.png';
+
+  Future<String> saveLogo(File sourceFile) async {
+    final path = await _basePath;
+    final dest = File('$path/$_logoFile');
+    await sourceFile.copy(dest.path);
+    return dest.path;
+  }
+
+  Future<File?> loadLogo() async {
+    try {
+      final path = await _basePath;
+      final file = File('$path/$_logoFile');
+      if (await file.exists()) return file;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> deleteLogo() async {
+    try {
+      final path = await _basePath;
+      final file = File('$path/$_logoFile');
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
 }

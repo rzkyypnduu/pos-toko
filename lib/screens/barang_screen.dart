@@ -108,40 +108,67 @@ class _BarangList extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+          child: Column(
             children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: 'Cari barang...',
-                    prefixIcon:
-                        const Icon(Icons.search, size: 20, color: Colors.grey),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    isDense: true,
+              TextField(
+                decoration: InputDecoration(
+                  hintText: 'Cari barang...',
+                  prefixIcon:
+                      const Icon(Icons.search, size: 20, color: Colors.grey),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
-                  onChanged: (v) => provider.searchQuery = v,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  isDense: true,
                 ),
+                onChanged: (v) => provider.searchQuery = v,
               ),
-              const SizedBox(width: 8),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.filter_list),
-                tooltip: 'Filter Kategori',
-                onSelected: (v) => provider.filterKategori = v,
-                itemBuilder: (_) {
-                  return provider.kategoris.map((k) {
-                    return PopupMenuItem(value: k, child: Text(k));
-                  }).toList();
-                },
-              ),
+              if (provider.kategoris.length > 1)
+                SizedBox(
+                  height: 40,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.only(top: 8),
+                    itemCount: provider.kategoris.length,
+                    itemBuilder: (context, index) {
+                      final kat = provider.kategoris[index];
+                      final selected = provider.filterKategori == kat;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: ChoiceChip(
+                          label: Text(kat,
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: selected
+                                      ? Colors.white
+                                      : Colors.grey[700])),
+                          selected: selected,
+                          selectedColor: const Color(0xFF1565C0),
+                          backgroundColor: Colors.grey.shade100,
+                          onSelected: (_) =>
+                              provider.filterKategori = kat,
+                          visualDensity: VisualDensity.compact,
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 4),
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
+          ),
+        ),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Text(
+            'Total: ${provider.totalBarang} barang',
+            style: TextStyle(fontSize: 12, color: Colors.grey[500]),
           ),
         ),
         Expanded(
@@ -164,34 +191,22 @@ class _BarangList extends StatelessWidget {
                   ),
                 )
               : ListView.builder(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 4),
                   itemCount: barang.length,
                   itemBuilder: (context, index) {
                     final b = barang[index];
                     return Container(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 3),
+                      margin: const EdgeInsets.symmetric(vertical: 4),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 10),
+                          horizontal: 12, vertical: 10),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.grey.shade200),
                       ),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 18,
-                            backgroundColor:
-                                const Color(0xFF1565C0).withValues(alpha: 0.08),
-                            child: Text(
-                              b.kategori[0].toUpperCase(),
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1565C0)),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -202,22 +217,22 @@ class _BarangList extends StatelessWidget {
                                         fontWeight: FontWeight.w500)),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${b.kode} | ${b.kategori} | Stok: ${b.stok}',
+                                  formatRupiah(b.hargaJual),
+                                  style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1565C0)),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${b.kode} | ${b.kategori} | Stok: ${b.stok} ${b.satuan}',
                                   style: TextStyle(
-                                      fontSize: 12, color: Colors.grey[500]),
+                                      fontSize: 11,
+                                      color: Colors.grey[500]),
                                 ),
                               ],
                             ),
                           ),
-                          Text(
-                            formatRupiah(b.hargaJual),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                              color: Color(0xFF1565C0),
-                            ),
-                          ),
-                          const SizedBox(width: 4),
                           IconButton(
                             icon: const Icon(Icons.edit, size: 18),
                             color: Colors.grey[600],
@@ -326,6 +341,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
   late TextEditingController _hargaJualCtrl;
   late TextEditingController _stokCtrl;
   late TextEditingController _kategoriCtrl;
+  String _satuan = 'pcs';
   bool _showScanner = false;
   MobileScannerController? _scannerController;
   bool _isProcessing = false;
@@ -346,6 +362,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
         TextEditingController(text: b != null ? '${b.stok}' : '0');
     _kategoriCtrl =
         TextEditingController(text: b?.kategori ?? 'Umum');
+    _satuan = b?.satuan ?? 'pcs';
     if (widget.openScanner && !isEdit) {
       _showScanner = true;
       _scannerController = MobileScannerController(
@@ -581,6 +598,27 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  initialValue: _satuan,
+                  decoration: const InputDecoration(
+                    labelText: 'Satuan',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'pcs', child: Text('Pcs (Buah)')),
+                    DropdownMenuItem(value: 'kg', child: Text('Kg (Kilogram)')),
+                    DropdownMenuItem(value: 'gram', child: Text('Gram')),
+                    DropdownMenuItem(value: 'liter', child: Text('Liter')),
+                    DropdownMenuItem(value: 'ml', child: Text('ML (Mililiter)')),
+                    DropdownMenuItem(value: 'pack', child: Text('Pack')),
+                    DropdownMenuItem(value: 'box', child: Text('Box')),
+                    DropdownMenuItem(value: 'lusin', child: Text('Lusin')),
+                  ],
+                  onChanged: (v) {
+                    if (v != null) setState(() => _satuan = v);
+                  },
+                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: _save,
@@ -613,6 +651,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
         hargaJual: hargaJual,
         stok: stok,
         kategori: kategori,
+        satuan: _satuan,
       );
       provider.updateBarang(widget.barang!.id, updated);
     } else {
@@ -626,6 +665,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
             hargaJual: hargaJual,
             stok: stok,
             kategori: kategori,
+            satuan: _satuan,
           ),
         );
       } else {
@@ -637,6 +677,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
           hargaJual: hargaJual,
           stok: stok,
           kategori: kategori,
+          satuan: _satuan,
         ));
       }
     }

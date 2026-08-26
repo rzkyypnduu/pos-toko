@@ -5,6 +5,7 @@ class TransaksiItem {
   final String nama;
   final double harga;
   final double hargaBeli;
+  final String satuan;
   double qty;
 
   TransaksiItem({
@@ -12,6 +13,7 @@ class TransaksiItem {
     required this.nama,
     required this.harga,
     this.hargaBeli = 0,
+    this.satuan = 'pcs',
     this.qty = 1,
   });
 
@@ -24,6 +26,7 @@ class TransaksiItem {
       'nama': nama,
       'harga': harga,
       'hargaBeli': hargaBeli,
+      'satuan': satuan,
       'qty': qty,
     };
   }
@@ -34,6 +37,7 @@ class TransaksiItem {
       nama: map['nama'] ?? '',
       harga: (map['harga'] ?? 0).toDouble(),
       hargaBeli: (map['hargaBeli'] ?? 0).toDouble(),
+      satuan: map['satuan'] ?? 'pcs',
       qty: (map['qty'] ?? 1).toDouble(),
     );
   }

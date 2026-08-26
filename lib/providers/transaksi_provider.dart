@@ -161,13 +161,13 @@ class TransaksiProvider extends ChangeNotifier {
     return total;
   }
 
-  void tambahKeKeranjang(String barangId, String nama) {
+  void tambahKeKeranjang(String barangId, String nama, {String satuan = 'pcs'}) {
     final existing =
         _cartItems.indexWhere((c) => c.barangId == barangId);
     if (existing >= 0) {
       _cartItems[existing].qty += 1;
     } else {
-      _cartItems.add(CartItem(barangId: barangId, nama: nama));
+      _cartItems.add(CartItem(barangId: barangId, nama: nama, satuan: satuan));
     }
     notifyListeners();
   }
@@ -227,6 +227,7 @@ class TransaksiProvider extends ChangeNotifier {
         nama: cart.nama,
         harga: harga,
         hargaBeli: hargaBeli,
+        satuan: cart.satuan,
         qty: cart.qty,
       ));
       total += harga * cart.qty;
@@ -252,11 +253,13 @@ class TransaksiProvider extends ChangeNotifier {
 class CartItem {
   final String barangId;
   final String nama;
+  final String satuan;
   double qty;
 
   CartItem({
     required this.barangId,
     required this.nama,
+    this.satuan = 'pcs',
     this.qty = 1,
   });
 }

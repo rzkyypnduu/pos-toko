@@ -8,6 +8,7 @@ class Barang {
   double hargaJual;
   int stok;
   String kategori;
+  String satuan;
   final DateTime createdAt;
 
   Barang({
@@ -18,6 +19,7 @@ class Barang {
     this.hargaJual = 0,
     this.stok = 0,
     this.kategori = 'Umum',
+    this.satuan = 'pcs',
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -32,6 +34,7 @@ class Barang {
       'hargaJual': hargaJual,
       'stok': stok,
       'kategori': kategori,
+      'satuan': satuan,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -45,6 +48,7 @@ class Barang {
       hargaJual: (map['hargaJual'] ?? 0).toDouble(),
       stok: map['stok'] ?? 0,
       kategori: map['kategori'] ?? 'Umum',
+      satuan: map['satuan'] ?? 'pcs',
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
@@ -60,6 +64,7 @@ class Barang {
     double? hargaJual,
     int? stok,
     String? kategori,
+    String? satuan,
   }) {
     return Barang(
       id: id,
@@ -69,6 +74,7 @@ class Barang {
       hargaJual: hargaJual ?? this.hargaJual,
       stok: stok ?? this.stok,
       kategori: kategori ?? this.kategori,
+      satuan: satuan ?? this.satuan,
       createdAt: createdAt,
     );
   }

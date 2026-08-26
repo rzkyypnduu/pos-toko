@@ -13,6 +13,11 @@ class PrinterProvider extends ChangeNotifier {
   PaperSize _paperSize = PaperSize.mm58;
   bool _autoPrint = false;
   String _namaToko = 'Tokoku';
+  String _alamat = '';
+  String _noTelp = '';
+  String _sloganPenutup = 'Terima kasih!';
+  String _footerStruk = 'Barang yang sudah dibeli\ntidak dapat dikembalikan.';
+  String _logoPath = '';
   String _selectedAddress = '';
   String _selectedName = '';
   String _connectionStatus = 'notConnected';
@@ -25,6 +30,11 @@ class PrinterProvider extends ChangeNotifier {
   PaperSize get paperSize => _paperSize;
   bool get autoPrint => _autoPrint;
   String get namaToko => _namaToko;
+  String get alamat => _alamat;
+  String get noTelp => _noTelp;
+  String get sloganPenutup => _sloganPenutup;
+  String get footerStruk => _footerStruk;
+  String get logoPath => _logoPath;
   String get selectedAddress => _selectedAddress;
   String get selectedName => _selectedName;
   String get connectionStatus => _connectionStatus;
@@ -50,12 +60,52 @@ class PrinterProvider extends ChangeNotifier {
     _safeNotify();
   }
 
+  set alamat(String value) {
+    _alamat = value;
+    _safeNotify();
+  }
+
+  set noTelp(String value) {
+    _noTelp = value;
+    _safeNotify();
+  }
+
+  set sloganPenutup(String value) {
+    _sloganPenutup = value;
+    _safeNotify();
+  }
+
+  set footerStruk(String value) {
+    _footerStruk = value;
+    _safeNotify();
+  }
+
+  set logoPath(String value) {
+    _logoPath = value;
+    _safeNotify();
+  }
+
   Future<void> loadSettings(Map<String, dynamic> settings) async {
     if (settings.containsKey('autoPrint')) {
       _autoPrint = settings['autoPrint'] == true;
     }
     if (settings.containsKey('namaToko')) {
       _namaToko = settings['namaToko'] ?? 'Tokoku';
+    }
+    if (settings.containsKey('alamat')) {
+      _alamat = settings['alamat'] ?? '';
+    }
+    if (settings.containsKey('noTelp')) {
+      _noTelp = settings['noTelp'] ?? '';
+    }
+    if (settings.containsKey('sloganPenutup')) {
+      _sloganPenutup = settings['sloganPenutup'] ?? 'Terima kasih!';
+    }
+    if (settings.containsKey('footerStruk')) {
+      _footerStruk = settings['footerStruk'] ?? 'Barang yang sudah dibeli\ntidak dapat dikembalikan.';
+    }
+    if (settings.containsKey('logoPath')) {
+      _logoPath = settings['logoPath'] ?? '';
     }
     if (settings.containsKey('paperSize')) {
       _paperSize =
@@ -70,6 +120,11 @@ class PrinterProvider extends ChangeNotifier {
     return {
       'autoPrint': _autoPrint,
       'namaToko': _namaToko,
+      'alamat': _alamat,
+      'noTelp': _noTelp,
+      'sloganPenutup': _sloganPenutup,
+      'footerStruk': _footerStruk,
+      'logoPath': _logoPath,
       'paperSize': _paperSize == PaperSize.mm80 ? 'mm80' : 'mm58',
       'selectedAddress': _selectedAddress,
       'selectedName': _selectedName,
@@ -187,6 +242,11 @@ class PrinterProvider extends ChangeNotifier {
   Future<bool> printStruk(dynamic transaksi) async {
     final connected = await ensureConnected();
     if (!connected) return false;
-    return await _service.printStruk(transaksi, _namaToko);
+    return await _service.printStruk(transaksi, _namaToko,
+        alamat: _alamat,
+        noTelp: _noTelp,
+        sloganPenutup: _sloganPenutup,
+        footerStruk: _footerStruk,
+        logoPath: _logoPath);
   }
 }

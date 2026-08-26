@@ -246,7 +246,7 @@ class _TransaksiBodyState extends State<_TransaksiBody> {
                                 fontWeight: FontWeight.w500,
                                 fontSize: 14)),
                         subtitle: Text(
-                            '${t.totalItemQty} item | ${formatDate(t.timestamp)}',
+                            '${formatQty(t.totalItemQty)} item | ${formatDate(t.timestamp)}',
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[500])),
                         trailing: Text(formatRupiah(t.total),

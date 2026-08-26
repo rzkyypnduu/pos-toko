@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/printer_provider.dart';
@@ -63,26 +66,53 @@ class _PengaturanBody extends StatefulWidget {
 
 class _PengaturanBodyState extends State<_PengaturanBody> {
   final _namaTokoCtrl = TextEditingController();
+  final _alamatCtrl = TextEditingController();
+  final _noTelpCtrl = TextEditingController();
+  final _sloganCtrl = TextEditingController();
+  final _footerCtrl = TextEditingController();
+  final _imagePicker = ImagePicker();
+  File? _logoFile;
 
   @override
   void initState() {
     super.initState();
     final printer = context.read<PrinterProvider>();
     _namaTokoCtrl.text = printer.namaToko;
+    _alamatCtrl.text = printer.alamat;
+    _noTelpCtrl.text = printer.noTelp;
+    _sloganCtrl.text = printer.sloganPenutup;
+    _footerCtrl.text = printer.footerStruk;
+    _loadLogo();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       printer.refreshConnectionStatus();
     });
   }
 
+  Future<void> _loadLogo() async {
+    final storage = StorageService();
+    final file = await storage.loadLogo();
+    if (mounted && file != null) {
+      setState(() => _logoFile = file);
+    }
+  }
+
   @override
   void dispose() {
     _namaTokoCtrl.dispose();
+    _alamatCtrl.dispose();
+    _noTelpCtrl.dispose();
+    _sloganCtrl.dispose();
+    _footerCtrl.dispose();
     super.dispose();
   }
 
   void _saveSettings() async {
     final printer = context.read<PrinterProvider>();
     printer.namaToko = _namaTokoCtrl.text.trim();
+    printer.alamat = _alamatCtrl.text.trim();
+    printer.noTelp = _noTelpCtrl.text.trim();
+    printer.sloganPenutup = _sloganCtrl.text.trim();
+    printer.footerStruk = _footerCtrl.text.trim();
 
     final storage = StorageService();
     await storage.saveSettings(printer.toSettingsMap());
@@ -92,6 +122,57 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
         const SnackBar(content: Text('Pengaturan tersimpan')),
       );
     }
+  }
+
+  Future<void> _pickLogo() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galeri'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Kamera'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 300,
+      maxHeight: 300,
+      imageQuality: 85,
+    );
+    if (picked == null) return;
+
+    final storage = StorageService();
+    final savedPath = await storage.saveLogo(File(picked.path));
+    if (!mounted) return;
+    final printer = context.read<PrinterProvider>();
+    printer.logoPath = savedPath;
+    _saveSettings();
+
+    setState(() => _logoFile = File(savedPath));
+  }
+
+  Future<void> _removeLogo() async {
+    final storage = StorageService();
+    await storage.deleteLogo();
+    if (!mounted) return;
+    final printer = context.read<PrinterProvider>();
+    printer.logoPath = '';
+    _saveSettings();
+    setState(() => _logoFile = null);
   }
 
   Future<void> _showDevicePicker() async {
@@ -110,6 +191,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
         }
         return;
       }
+      if (!mounted) return;
       final outcome = await showModalBottomSheet<_PickerOutcome>(
         context: context,
         isScrollControlled: true,
@@ -153,7 +235,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildSectionTitle('Toko'),
+        _buildSectionTitle('Custom Struk'),
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -161,14 +243,113 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: TextField(
-            controller: _namaTokoCtrl,
-            decoration: const InputDecoration(
-              labelText: 'Nama Toko',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.store),
-            ),
-            onChanged: (_) => _saveSettings(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: GestureDetector(
+                  onTap: _pickLogo,
+                  child: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 40,
+                        backgroundColor: Colors.grey.shade100,
+                        backgroundImage:
+                            _logoFile != null ? FileImage(_logoFile!) : null,
+                        child: _logoFile == null
+                            ? Icon(Icons.store,
+                                size: 36, color: Colors.grey.shade400)
+                            : null,
+                      ),
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1565C0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.camera_alt,
+                              size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (_logoFile != null)
+                Center(
+                  child: TextButton(
+                    onPressed: _removeLogo,
+                    child: const Text('Hapus Logo',
+                        style: TextStyle(color: Colors.red, fontSize: 12)),
+                  ),
+                ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _namaTokoCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Toko',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.store),
+                ),
+                onChanged: (_) => _saveSettings(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _alamatCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Alamat',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                onChanged: (_) => _saveSettings(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _noTelpCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'No. Telepon',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+                onChanged: (_) => _saveSettings(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _sloganCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Slogan Penutup Struk',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.format_quote),
+                ),
+                maxLines: 2,
+                onChanged: (_) => _saveSettings(),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _footerCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Footer Struk',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.notes),
+                  hintText: 'Barang yang sudah dibeli...',
+                ),
+                maxLines: 2,
+                onChanged: (_) => _saveSettings(),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _showReceiptPreview(context),
+                  icon: const Icon(Icons.receipt_long, size: 18),
+                  label: const Text('Preview Struk'),
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 24),
@@ -357,6 +538,225 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
           ),
         ),
       ],
+    );
+  }
+
+  void _showReceiptPreview(BuildContext context) {
+    final now = DateTime.now();
+    final dateStr =
+        '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} '
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius:
+                BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Preview Struk',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(20),
+                  child: Center(
+                    child: Container(
+                      width: 260,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withValues(alpha: 0.2),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (_logoFile != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: Image.file(
+                                _logoFile!,
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          Text(
+                            _namaTokoCtrl.text.isNotEmpty
+                                ? _namaTokoCtrl.text
+                                : 'Nama Toko',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (_alamatCtrl.text.isNotEmpty)
+                            Text(
+                              _alamatCtrl.text,
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey.shade600),
+                              textAlign: TextAlign.center,
+                            ),
+                          if (_noTelpCtrl.text.isNotEmpty)
+                            Text(
+                              'Telp: ${_noTelpCtrl.text}',
+                              style: TextStyle(
+                                  fontSize: 11, color: Colors.grey.shade600),
+                              textAlign: TextAlign.center,
+                            ),
+                          if (_alamatCtrl.text.isNotEmpty ||
+                              _noTelpCtrl.text.isNotEmpty)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 6),
+                              child: Divider(
+                                  height: 1, color: Colors.grey.shade300),
+                            ),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade500),
+                            textAlign: TextAlign.center,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Divider(
+                                height: 1, color: Colors.grey.shade300),
+                          ),
+                          _receiptItem('Indomie Goreng', '2 pcs', 'Rp5.000', 'Rp10.000'),
+                          _receiptItem('Telur', '1 kg', 'Rp28.000', 'Rp28.000'),
+                          _receiptItem('Sabun Botol', '1 pcs', 'Rp8.500', 'Rp8.500'),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Divider(
+                                height: 1, color: Colors.grey.shade300),
+                          ),
+                          _receiptRow('TOTAL', 'Rp46.500', bold: true),
+                          _receiptRow('BAYAR', 'Rp50.000'),
+                          _receiptRow('KEMBALI', 'Rp3.500'),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Divider(
+                                height: 1, color: Colors.grey.shade300),
+                          ),
+                          Text(
+                            _sloganCtrl.text.isNotEmpty
+                                ? _sloganCtrl.text
+                                : 'Terima kasih!',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          if (_footerCtrl.text.isNotEmpty)
+                            Text(
+                              _footerCtrl.text,
+                              style: TextStyle(
+                                  fontSize: 10, color: Colors.grey.shade500),
+                              textAlign: TextAlign.center,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _receiptRow(String left, String right, {bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              left,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            right,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _receiptItem(String name, String qty, String unitPrice, String subtotal) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: const TextStyle(fontSize: 12)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('$qty x $unitPrice',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              Text(subtotal, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
