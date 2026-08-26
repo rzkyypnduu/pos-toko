@@ -5,6 +5,7 @@ import 'package:flutter_classic_bluetooth/flutter_classic_bluetooth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
+import '../models/transaksi.dart';
 import '../providers/printer_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/paper_size.dart';
@@ -705,11 +706,66 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
                   ),
                 ),
               ),
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () => _printTestFromPreview(context),
+                    icon: const Icon(Icons.print, size: 18),
+                    label: const Text('Cetak Preview'),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _printTestFromPreview(BuildContext context) async {
+    final printer = context.read<PrinterProvider>();
+    final sampleTransaksi = Transaksi(
+      id: 'preview',
+      items: [
+        TransaksiItem(
+            barangId: 'preview_1',
+            nama: 'Indomie Goreng',
+            harga: 5000,
+            qty: 2,
+            satuan: 'pcs'),
+        TransaksiItem(
+            barangId: 'preview_2',
+            nama: 'Telur',
+            harga: 28000,
+            qty: 1,
+            satuan: 'kg'),
+        TransaksiItem(
+            barangId: 'preview_3',
+            nama: 'Sabun Botol',
+            harga: 8500,
+            qty: 1,
+            satuan: 'pcs'),
+      ],
+      total: 46500,
+      bayar: 50000,
+      kembalian: 3500,
+      timestamp: DateTime.now(),
+    );
+    final result = await printer.printStruk(sampleTransaksi);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result ? 'Preview berhasil dicetak' : 'Gagal cetak. Pastikan printer terhubung.'),
+          backgroundColor: result ? const Color(0xFF2E7D32) : Colors.red,
+        ),
+      );
+    }
   }
 
   Widget _receiptRow(String left, String right, {bool bold = false}) {
