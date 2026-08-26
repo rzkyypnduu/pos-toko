@@ -519,7 +519,7 @@ class _CartPanelState extends State<_CartPanel> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${b.kode} | Stok: ${b.stok} ${b.satuan}',
+                                  '${b.kode} | Stok: ${formatQty(b.stok)} ${b.satuan}',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey[500]),
@@ -724,7 +724,7 @@ class _CartPanelState extends State<_CartPanel> {
     );
 
     for (final item in transaksi.items) {
-      await barangProvider.kurangiStok(item.barangId, item.qty.round());
+      await barangProvider.kurangiStok(item.barangId, item.qty);
     }
 
     cart.clearCart();

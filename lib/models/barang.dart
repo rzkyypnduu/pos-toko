@@ -6,7 +6,7 @@ class Barang {
   String nama;
   double hargaBeli;
   double hargaJual;
-  int stok;
+  double stok;
   String kategori;
   String satuan;
   final DateTime createdAt;
@@ -46,7 +46,7 @@ class Barang {
       nama: map['nama'] ?? '',
       hargaBeli: (map['hargaBeli'] ?? 0).toDouble(),
       hargaJual: (map['hargaJual'] ?? 0).toDouble(),
-      stok: map['stok'] ?? 0,
+      stok: (map['stok'] ?? 0).toDouble(),
       kategori: map['kategori'] ?? 'Umum',
       satuan: map['satuan'] ?? 'pcs',
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
@@ -62,7 +62,7 @@ class Barang {
     String? nama,
     double? hargaBeli,
     double? hargaJual,
-    int? stok,
+    double? stok,
     String? kategori,
     String? satuan,
   }) {

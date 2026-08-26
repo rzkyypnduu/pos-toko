@@ -225,7 +225,7 @@ class _BarangList extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  '${b.kode} | ${b.kategori} | Stok: ${b.stok} ${b.satuan}',
+                                  '${b.kode} | ${b.kategori} | Stok: ${formatQty(b.stok)} ${b.satuan}',
                                   style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey[500]),
@@ -359,7 +359,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
     _hargaJualCtrl =
         TextEditingController(text: b != null ? formatMoneyDisplay(b.hargaJual.toInt().toString()) : '');
     _stokCtrl =
-        TextEditingController(text: b != null ? '${b.stok}' : '0');
+        TextEditingController(text: b != null ? formatQty(b.stok) : '0');
     _kategoriCtrl =
         TextEditingController(text: b?.kategori ?? 'Umum');
     _satuan = b?.satuan ?? 'pcs';
@@ -450,7 +450,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
                                   _namaCtrl.text = existing.nama;
                                   _hargaBeliCtrl.text = formatMoneyDisplay(existing.hargaBeli.toInt().toString());
                                   _hargaJualCtrl.text = formatMoneyDisplay(existing.hargaJual.toInt().toString());
-                                  _stokCtrl.text = '${existing.stok}';
+                                  _stokCtrl.text = formatQty(existing.stok);
                                   _kategoriCtrl.text = existing.kategori;
                                 }
                                 _showScanner = false;
@@ -583,7 +583,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
                           labelText: 'Stok',
                           border: OutlineInputBorder(),
                         ),
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -641,7 +641,7 @@ class _BarangFormSheetState extends State<_BarangFormSheet> {
     final nama = _namaCtrl.text.trim();
     final hargaBeli = parseRupiah(_hargaBeliCtrl.text);
     final hargaJual = parseRupiah(_hargaJualCtrl.text);
-    final stok = int.tryParse(_stokCtrl.text) ?? 0;
+    final stok = double.tryParse(_stokCtrl.text.replaceAll(',', '.')) ?? 0;
     final kategori = _kategoriCtrl.text.trim();
 
     if (isEdit) {

@@ -42,7 +42,7 @@ class BarangProvider extends ChangeNotifier {
 
   int get totalBarang => _barangList.length;
 
-  int get totalStok {
+  double get totalStok {
     return _barangList.fold(0, (sum, b) => sum + b.stok);
   }
 
@@ -104,7 +104,7 @@ class BarangProvider extends ChangeNotifier {
         .toList();
   }
 
-  Future<void> tambahStok(String id, int jumlah) async {
+  Future<void> tambahStok(String id, double jumlah) async {
     final index = _barangList.indexWhere((b) => b.id == id);
     if (index != -1) {
       _barangList[index].stok += jumlah;
@@ -113,7 +113,7 @@ class BarangProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> kurangiStok(String id, int jumlah) async {
+  Future<void> kurangiStok(String id, double jumlah) async {
     final index = _barangList.indexWhere((b) => b.id == id);
     if (index != -1) {
       _barangList[index].stok =

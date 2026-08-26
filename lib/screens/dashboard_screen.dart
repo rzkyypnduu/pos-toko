@@ -918,7 +918,7 @@ class _LowStockItem extends StatelessWidget {
             ),
             child: Center(
               child: Text(
-                '${barang.stok}',
+                formatQty(barang.stok),
                 style: TextStyle(
                     color: color,
                     fontWeight: FontWeight.bold,
@@ -947,7 +947,7 @@ class _LowStockItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
-              isOut ? 'Habis' : 'Sisa ${barang.stok}',
+              isOut ? 'Habis' : 'Sisa ${formatQty(barang.stok)}',
               style: TextStyle(
                   color: color,
                   fontSize: 11,

@@ -68,10 +68,16 @@ class Transaksi {
     return totalKeuntungan;
   }
 
+  static const _weightUnits = {'kg', 'gram', 'liter', 'ml'};
+
   double get totalItemQty {
     double total = 0;
     for (final item in items) {
-      total += item.qty;
+      if (_weightUnits.contains(item.satuan)) {
+        total += 1;
+      } else {
+        total += item.qty;
+      }
     }
     return total;
   }
