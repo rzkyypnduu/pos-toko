@@ -462,6 +462,7 @@ class _TransaksiDetailDialog extends StatelessWidget {
                         child: Divider(
                             height: 1, color: Colors.grey.shade300),
                       ),
+                      _receiptRow('Total Item', '${formatQty(transaksi.totalItemQty)}'),
                       _receiptRow('TOTAL', formatRupiah(transaksi.total),
                           bold: true),
                       _receiptRow('BAYAR', formatRupiah(transaksi.bayar)),

@@ -203,6 +203,7 @@ class PrinterService {
     }
 
     bytes.addAll(_lineHR());
+    bytes.addAll(_lineTwoCol('Total Item', '${formatQty(transaksi.totalItemQty)}'));
     bytes.addAll(_bold(true));
     bytes.addAll(_lineTwoCol('TOTAL', formatRupiah(transaksi.total)));
     bytes.addAll(_bold(false));

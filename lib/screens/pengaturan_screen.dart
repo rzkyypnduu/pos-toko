@@ -674,6 +674,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
                             child: Divider(
                                 height: 1, color: Colors.grey.shade300),
                           ),
+                          _receiptRow('Total Item', '4'),
                           _receiptRow('TOTAL', 'Rp46.500', bold: true),
                           _receiptRow('BAYAR', 'Rp50.000'),
                           _receiptRow('KEMBALI', 'Rp3.500'),
