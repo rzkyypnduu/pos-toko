@@ -655,6 +655,12 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
                                 fontSize: 11, color: Colors.grey.shade500),
                             textAlign: TextAlign.center,
                           ),
+                          Text(
+                            'ID: #SAMPLE001',
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade500),
+                            textAlign: TextAlign.center,
+                          ),
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             child: Divider(
