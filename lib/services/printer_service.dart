@@ -196,12 +196,10 @@ class PrinterService {
     for (final item in transaksi.items) {
       final qty = item.qty;
       final satuan = item.satuan.isNotEmpty ? item.satuan : 'pcs';
-      bytes.addAll(_leftAlign());
-      bytes.addAll(_lineText(namaToko: item.nama));
       final unitPrice = qty > 0 ? item.subtotal / qty : item.subtotal;
-      final detail = '${formatQty(qty)} $satuan x ${formatRupiah(unitPrice)}';
-      final price = formatRupiah(item.subtotal);
-      bytes.addAll(_lineTwoCol(detail, price));
+      bytes.addAll(_leftAlign());
+      bytes.addAll(_lineTwoCol(item.nama, ''));
+      bytes.addAll(_lineTwoCol('  ${formatQty(qty)} $satuan x ${formatRupiah(unitPrice)}', formatRupiah(item.subtotal)));
     }
 
     bytes.addAll(_lineHR());

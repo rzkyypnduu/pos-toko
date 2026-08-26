@@ -468,7 +468,7 @@ class _CartPanelState extends State<_CartPanel> {
                       onTap: inCart
                           ? null
                           : () {
-                              cart.tambahKeKeranjang(b.id, b.nama);
+                              cart.tambahKeKeranjang(b.id, b.nama, satuan: b.satuan);
                               ScaffoldMessenger.of(context)
                                   .hideCurrentSnackBar();
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -583,7 +583,7 @@ class _CartPanelState extends State<_CartPanel> {
                           ] else
                             GestureDetector(
                               onTap: () {
-                                cart.tambahKeKeranjang(b.id, b.nama);
+                                cart.tambahKeKeranjang(b.id, b.nama, satuan: b.satuan);
                                 ScaffoldMessenger.of(context)
                                     .hideCurrentSnackBar();
                                 ScaffoldMessenger.of(context).showSnackBar(
