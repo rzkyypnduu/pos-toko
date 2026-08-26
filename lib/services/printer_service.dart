@@ -190,6 +190,7 @@ class PrinterService {
     }
 
     bytes.addAll(_lineText(namaToko: formatDate(transaksi.timestamp)));
+    bytes.addAll(_lineText(namaToko: 'ID: #${transaksi.id}'));
     bytes.addAll(_lineHR());
 
     for (final item in transaksi.items) {

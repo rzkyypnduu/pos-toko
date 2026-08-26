@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -333,6 +335,7 @@ class _TransaksiDetailDialog extends StatelessWidget {
     final noTelp = printer.noTelp;
     final slogan = printer.sloganPenutup;
     final footer = printer.footerStruk;
+    final logoPath = printer.logoPath;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -379,6 +382,19 @@ class _TransaksiDetailDialog extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      if (logoPath.isNotEmpty) ...[
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Image.file(
+                            File(logoPath),
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const SizedBox(),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
                       Text(
                         namaToko,
                         style: const TextStyle(
@@ -403,6 +419,12 @@ class _TransaksiDetailDialog extends StatelessWidget {
                         ),
                       Text(
                         formatDate(transaksi.timestamp),
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.grey.shade500),
+                        textAlign: TextAlign.center,
+                      ),
+                      Text(
+                        'ID: #${transaksi.id}',
                         style: TextStyle(
                             fontSize: 11, color: Colors.grey.shade500),
                         textAlign: TextAlign.center,
