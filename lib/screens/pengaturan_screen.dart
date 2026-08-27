@@ -10,6 +10,7 @@ import '../providers/printer_provider.dart';
 import '../services/storage_service.dart';
 import '../utils/paper_size.dart';
 import '../widgets/responsive_layout.dart';
+import 'logo_crop_screen.dart';
 
 class PengaturanScreen extends StatelessWidget {
   const PengaturanScreen({super.key});
@@ -145,14 +146,22 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
 
     final picked = await _imagePicker.pickImage(
       source: source,
-      maxWidth: 300,
-      maxHeight: 300,
-      imageQuality: 85,
+      imageQuality: 95,
     );
     if (picked == null) return;
 
+    if (!mounted) return;
+    final croppedFile = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LogoCropScreen(imageFile: File(picked.path)),
+      ),
+    );
+    if (croppedFile == null) return;
+
     final storage = StorageService();
-    final savedPath = await storage.saveLogo(File(picked.path));
+    final savedPath = await storage.saveLogo(croppedFile);
+    await croppedFile.delete();
     if (!mounted) return;
     final printer = context.read<PrinterProvider>();
     printer.logoPath = savedPath;
