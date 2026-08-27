@@ -73,11 +73,14 @@ class StorageService {
     await file.writeAsString(jsonEncode(settings));
   }
 
-  static const _logoFile = 'logo_toko.png';
+  static const _logoPrefix = 'logo_toko_';
 
   Future<String> saveLogo(File sourceFile) async {
     final path = await _basePath;
-    final dest = File('$path/$_logoFile');
+    await _cleanOldLogos(path);
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final filename = '${_logoPrefix}${timestamp}.png';
+    final dest = File('$path/$filename');
     await sourceFile.copy(dest.path);
     return dest.path;
   }
@@ -85,9 +88,14 @@ class StorageService {
   Future<File?> loadLogo() async {
     try {
       final path = await _basePath;
-      final file = File('$path/$_logoFile');
-      if (await file.exists()) return file;
-      return null;
+      final dir = Directory(path);
+      final files = dir.listSync().whereType<File>().where((f) {
+        final name = f.uri.pathSegments.last;
+        return name.startsWith(_logoPrefix) && name.endsWith('.png');
+      }).toList();
+      if (files.isEmpty) return null;
+      files.sort((a, b) => b.path.compareTo(a.path));
+      return files.first;
     } catch (_) {
       return null;
     }
@@ -96,8 +104,20 @@ class StorageService {
   Future<void> deleteLogo() async {
     try {
       final path = await _basePath;
-      final file = File('$path/$_logoFile');
-      if (await file.exists()) await file.delete();
+      await _cleanOldLogos(path);
+    } catch (_) {}
+  }
+
+  Future<void> _cleanOldLogos(String basePath) async {
+    try {
+      final dir = Directory(basePath);
+      final files = dir.listSync().whereType<File>().where((f) {
+        final name = f.uri.pathSegments.last;
+        return name.startsWith(_logoPrefix) && name.endsWith('.png');
+      }).toList();
+      for (final f in files) {
+        await f.delete();
+      }
     } catch (_) {}
   }
 }

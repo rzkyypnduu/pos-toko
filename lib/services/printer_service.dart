@@ -125,14 +125,16 @@ class PrinterService {
       String noTelp = '',
       String sloganPenutup = 'Terima kasih!',
       String footerStruk = 'Barang yang sudah dibeli\ntidak dapat dikembalikan.',
-      String logoPath = ''}) async {
+      String logoPath = '',
+      int paperWidth = 288}) async {
     if (!_isConnected || _connection == null) return false;
     final bytes = await _buildStrukBytes(transaksi, namaToko,
         alamat: alamat,
         noTelp: noTelp,
         sloganPenutup: sloganPenutup,
         footerStruk: footerStruk,
-        logoPath: logoPath);
+        logoPath: logoPath,
+        paperWidth: paperWidth);
     try {
       await _connection!.output.writeBytes(bytes);
       await _connection!.output.allSent;
@@ -174,7 +176,8 @@ class PrinterService {
       String noTelp = '',
       String sloganPenutup = 'Terima kasih!',
       String footerStruk = 'Barang yang sudah dibeli\ntidak dapat dikembalikan.',
-      String logoPath = ''}) async {
+      String logoPath = '',
+      int paperWidth = 288}) async {
     final List<int> bytes = [];
 
     bytes.addAll(_initialize());
@@ -186,7 +189,7 @@ class PrinterService {
       try {
         final logoFile = File(logoPath);
         if (await logoFile.exists()) {
-          final logoBytes = await _encodeLogoForPrinter(logoFile);
+          final logoBytes = await _encodeLogoForPrinter(logoFile, paperWidth: paperWidth);
           if (logoBytes != null) {
             bytes.addAll(logoBytes);
             bytes.addAll(Uint8List.fromList(utf8.encode('\n')));
@@ -281,37 +284,36 @@ class PrinterService {
 
   List<int> _cut() => [0x1D, 0x56, 0x00];
 
-  Future<Uint8List?> _encodeLogoForPrinter(File logoFile) async {
+  Future<Uint8List?> _encodeLogoForPrinter(File logoFile, {int paperWidth = 288}) async {
     try {
       final bytes = await logoFile.readAsBytes();
       final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
       final image = frame.image;
 
-      // Scale to max 384px width (80mm paper) or 288px (58mm)
-      final maxWidth = 300;
+      final maxWidth = paperWidth;
       final aspectRatio = image.width / image.height;
       final scaledWidth = min(image.width, maxWidth).toInt();
       final scaledHeight = (scaledWidth / aspectRatio).toInt();
 
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
+      final offsetX = ((paperWidth - scaledWidth) / 2).toDouble();
       canvas.drawImageRect(
         image,
         Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-        Rect.fromLTWH(0, 0, scaledWidth.toDouble(), scaledHeight.toDouble()),
+        Rect.fromLTWH(offsetX, 0, scaledWidth.toDouble(), scaledHeight.toDouble()),
         Paint()..filterQuality = FilterQuality.high,
       );
       final picture = recorder.endRecording();
       final resizedImage =
-          await picture.toImage(scaledWidth, scaledHeight);
+          await picture.toImage(paperWidth, scaledHeight);
       final byteData =
           await resizedImage.toByteData(format: ui.ImageByteFormat.rawRgba);
       if (byteData == null) return null;
 
       final rgba = byteData.buffer.asUint8List();
-      // Convert RGBA to monochrome bitmap for ESC/POS
-      final bitmapBytes = _encodeBitmapESC(rgba, scaledWidth, scaledHeight);
+      final bitmapBytes = _encodeBitmapESC(rgba, paperWidth, scaledHeight);
       return Uint8List.fromList(bitmapBytes);
     } catch (_) {
       return null;

@@ -246,11 +246,13 @@ class PrinterProvider extends ChangeNotifier {
   Future<bool> printStruk(dynamic transaksi) async {
     final connected = await ensureConnected();
     if (!connected) return false;
+    final paperWidth = _paperSize == PaperSize.mm80 ? 576 : 384;
     return await _service.printStruk(transaksi, _namaToko,
         alamat: _alamat,
         noTelp: _noTelp,
         sloganPenutup: _sloganPenutup,
         footerStruk: _footerStruk,
-        logoPath: _logoPath);
+        logoPath: _logoPath,
+        paperWidth: paperWidth);
   }
 }
