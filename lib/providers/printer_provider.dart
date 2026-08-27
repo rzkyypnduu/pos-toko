@@ -147,8 +147,12 @@ class PrinterProvider extends ChangeNotifier {
     }
     _connectionStatus = 'checking';
     _safeNotify();
-    final connected = _service.isConnected;
+    final connected = await _service.checkConnection();
     _connectionStatus = connected ? 'connected' : 'notConnected';
+    if (!connected) {
+      _selectedAddress = '';
+      _selectedName = '';
+    }
     _safeNotify();
   }
 

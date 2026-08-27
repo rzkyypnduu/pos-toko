@@ -89,6 +89,23 @@ class PrinterService {
     _connectedName = null;
   }
 
+  Future<bool> checkConnection() async {
+    if (_connection == null) {
+      _isConnected = false;
+      return false;
+    }
+    try {
+      _isConnected = _connection!.isConnected;
+      if (_isConnected) {
+        await _connection!.output.writeBytes([0x00]);
+        return true;
+      }
+    } catch (_) {}
+    _isConnected = false;
+    _connection = null;
+    return false;
+  }
+
   Future<bool> printTest() async {
     if (!_isConnected || _connection == null) return false;
     final bytes = _buildTestBytes();
@@ -97,6 +114,8 @@ class PrinterService {
       await _connection!.output.allSent;
       return true;
     } catch (_) {
+      _isConnected = false;
+      _connection = null;
       return false;
     }
   }
@@ -119,6 +138,8 @@ class PrinterService {
       await _connection!.output.allSent;
       return true;
     } catch (_) {
+      _isConnected = false;
+      _connection = null;
       return false;
     }
   }
@@ -317,6 +338,10 @@ class PrinterService {
           final px = x * 8 + bit;
           if (px < width) {
             final offset = (y * width + px) * 4;
+            final a = rgba[offset + 3];
+            if (a < 128) {
+              continue;
+            }
             final r = rgba[offset];
             final g = rgba[offset + 1];
             final b = rgba[offset + 2];
