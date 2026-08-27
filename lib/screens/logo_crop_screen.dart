@@ -17,11 +17,14 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
   double _scale = 1.0;
   double _minScale = 1.0;
   Size _imageSize = Size.zero;
+  Size _containerSize = Size.zero;
 
   @override
   void initState() {
     super.initState();
-    _loadImage();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadImage();
+    });
   }
 
   Future<void> _loadImage() async {
@@ -34,6 +37,8 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
 
     if (!mounted) return;
     final containerSize = MediaQuery.of(context).size.width - 32;
+    _containerSize = Size(containerSize, containerSize);
+
     final fitScale = max(
       containerSize / _imageSize.width,
       containerSize / _imageSize.height,
@@ -52,8 +57,11 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final containerSize = MediaQuery.of(context).size.width - 32;
+    final mq = MediaQuery.of(context);
+    final containerSize = mq.size.width - 32;
+
     return Scaffold(
+      backgroundColor: Colors.grey.shade900,
       appBar: AppBar(
         title: const Text('Potong Logo'),
         backgroundColor: const Color(0xFF1565C0),
@@ -64,27 +72,34 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
           const SizedBox(height: 12),
           Text(
             'Geser dan zoom logo agar pas di dalam kotak',
-            style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 13, color: Colors.grey.shade400),
           ),
           const SizedBox(height: 12),
-          Center(
-            child: ClipRect(
+          Expanded(
+            child: Center(
               child: SizedBox(
                 width: containerSize,
                 height: containerSize,
-                child: Stack(
-                  children: [
-                    GestureDetector(
-                      onScaleUpdate: (details) {
-                        setState(() {
-                          _scale = (_scale * details.scale).clamp(_minScale, _minScale * 3);
-                          _offset += details.focalPointDelta;
-                        });
-                      },
-                      child: Transform.translate(
-                        offset: _offset,
-                        child: Transform.scale(
-                          scale: 1.0,
+                child: ClipRect(
+                  child: Stack(
+                    children: [
+                      GestureDetector(
+                        onScaleStart: (_) {},
+                        onScaleUpdate: (details) {
+                          setState(() {
+                            final newScale = (_scale * details.scale).clamp(_minScale, _minScale * 3);
+                            final scaleRatio = newScale / _scale;
+                            _scale = newScale;
+                            final centerX = containerSize / 2;
+                            final centerY = containerSize / 2;
+                            _offset = Offset(
+                              centerX - (centerX - _offset.dx) * scaleRatio + details.focalPointDelta.dx,
+                              centerY - (centerY - _offset.dy) * scaleRatio + details.focalPointDelta.dy,
+                            );
+                          });
+                        },
+                        child: Transform.translate(
+                          offset: _offset,
                           child: SizedBox(
                             width: _imageSize.width * _scale,
                             height: _imageSize.height * _scale,
@@ -95,19 +110,18 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
                           ),
                         ),
                       ),
-                    ),
-                    IgnorePointer(
-                      child: CustomPaint(
-                        size: Size(containerSize, containerSize),
-                        painter: _CropOverlayPainter(),
+                      IgnorePointer(
+                        child: CustomPaint(
+                          size: Size(containerSize, containerSize),
+                          painter: _GridPainter(),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          const Spacer(),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -117,12 +131,16 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
                     label: const Text('Batal'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white54),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: _cropAndSave,
+                    onPressed: _imageSize == Size.zero ? null : _cropAndSave,
                     icon: const Icon(Icons.check),
                     label: const Text('Gunakan'),
                     style: ElevatedButton.styleFrom(
@@ -140,7 +158,7 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
   }
 
   Future<void> _cropAndSave() async {
-    final containerSize = MediaQuery.of(context).size.width - 32;
+    final containerSize = _containerSize.width;
     final targetSize = 300;
 
     final bytes = await widget.imageFile.readAsBytes();
@@ -185,37 +203,52 @@ class _LogoCropScreenState extends State<LogoCropScreen> {
   }
 }
 
-class _CropOverlayPainter extends CustomPainter {
+class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.black54
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
-
-    final clearPaint = Paint()..blendMode = BlendMode.clear;
-    final squareSize = size.width;
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, squareSize, squareSize),
-      clearPaint,
-    );
-
     final borderPaint = Paint()
       ..color = Colors.white
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, squareSize, squareSize),
+      Rect.fromLTWH(0, 0, size.width, size.height),
       borderPaint,
     );
 
     final linePaint = Paint()
       ..color = Colors.white38
       ..strokeWidth = 0.5;
-    final third = squareSize / 3;
+    final third = size.width / 3;
     for (int i = 1; i <= 2; i++) {
-      canvas.drawLine(Offset(third * i, 0), Offset(third * i, squareSize), linePaint);
-      canvas.drawLine(Offset(0, third * i), Offset(squareSize, third * i), linePaint);
+      canvas.drawLine(Offset(third * i, 0), Offset(third * i, size.height), linePaint);
+      canvas.drawLine(Offset(0, third * i), Offset(size.width, third * i), linePaint);
+    }
+
+    final cornerPaint = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    final cornerLen = size.width / 8;
+    final paths = [
+      Path()
+        ..moveTo(0, cornerLen)
+        ..lineTo(0, 0)
+        ..lineTo(cornerLen, 0),
+      Path()
+        ..moveTo(size.width - cornerLen, 0)
+        ..lineTo(size.width, 0)
+        ..lineTo(size.width, cornerLen),
+      Path()
+        ..moveTo(0, size.height - cornerLen)
+        ..lineTo(0, size.height)
+        ..lineTo(cornerLen, size.height),
+      Path()
+        ..moveTo(size.width - cornerLen, size.height)
+        ..lineTo(size.width, size.height)
+        ..lineTo(size.width, size.height - cornerLen),
+    ];
+    for (final p in paths) {
+      canvas.drawPath(p, cornerPaint);
     }
   }
 
