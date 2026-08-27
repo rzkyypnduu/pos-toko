@@ -73,6 +73,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
   final _footerCtrl = TextEditingController();
   final _imagePicker = ImagePicker();
   File? _logoFile;
+  int _logoKey = 0;
 
   @override
   void initState() {
@@ -157,7 +158,10 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
     printer.logoPath = savedPath;
     _saveSettings();
 
-    setState(() => _logoFile = File(savedPath));
+    setState(() {
+      _logoFile = File(savedPath);
+      _logoKey++;
+    });
   }
 
   Future<void> _removeLogo() async {
@@ -167,7 +171,10 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
     final printer = context.read<PrinterProvider>();
     printer.logoPath = '';
     _saveSettings();
-    setState(() => _logoFile = null);
+    setState(() {
+      _logoFile = null;
+      _logoKey++;
+    });
   }
 
   Future<void> _showDevicePicker() async {
@@ -247,6 +254,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
                   child: Stack(
                     children: [
                       CircleAvatar(
+                        key: ValueKey('logo_$_logoKey'),
                         radius: 40,
                         backgroundColor: Colors.grey.shade100,
                         backgroundImage:

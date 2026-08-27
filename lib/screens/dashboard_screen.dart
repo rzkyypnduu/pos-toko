@@ -113,6 +113,8 @@ class _DashboardBodyState extends State<_DashboardBody> {
               _buildDateFilter(context),
               const SizedBox(height: 16),
               _buildDayCards(context),
+              const SizedBox(height: 24),
+              _buildDailyProfitChart(context),
             ],
             if (_selectedView == _DashboardView.semua ||
                 _selectedView == _DashboardView.bulan) ...[
@@ -121,8 +123,6 @@ class _DashboardBodyState extends State<_DashboardBody> {
               _buildMonthCards(context),
               const SizedBox(height: 24),
               _buildMonthlyProfitChart(context),
-              const SizedBox(height: 24),
-              _buildDailyProfitChart(context),
             ],
             if (_selectedView == _DashboardView.semua ||
                 _selectedView == _DashboardView.barang) ...[
