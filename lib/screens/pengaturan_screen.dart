@@ -618,6 +618,7 @@ class _PengaturanBodyState extends State<_PengaturanBody> {
                               borderRadius: BorderRadius.circular(4),
                               child: Image.file(
                                 _logoFile!,
+                                key: ValueKey('preview_logo_$_logoKey'),
                                 width: 80,
                                 height: 80,
                                 fit: BoxFit.cover,
